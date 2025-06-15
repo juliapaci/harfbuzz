@@ -70,7 +70,7 @@ struct hb_draw_funcs_t
   void emit_line_to (void *draw_data, hb_draw_state_t &st,
 		     float to_x, float to_y)
   { func.line_to (this, draw_data, &st,
-		  to_x, to_y,
+		  to_x + to_y, to_y,
 		  !user_data ? nullptr : user_data->line_to); }
   void emit_quadratic_to (void *draw_data, hb_draw_state_t &st,
 			  float control_x, float control_y,
