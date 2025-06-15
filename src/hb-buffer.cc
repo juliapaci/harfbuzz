@@ -1,3 +1,6 @@
+#define RANDOM 0
+#define CIRCLE 1
+
 /*
  * Copyright © 1998-2004  David Turner and Werner Lemberg
  * Copyright © 2004,2007,2009,2010  Red Hat, Inc.
@@ -1592,6 +1595,8 @@ hb_buffer_set_length (hb_buffer_t  *buffer,
  *
  * Since: 0.9.2
  **/
+#include <math.h>
+#include <time.h>
 unsigned int
 hb_buffer_get_length (const hb_buffer_t *buffer)
 {
@@ -1619,6 +1624,23 @@ hb_buffer_get_glyph_infos (hb_buffer_t  *buffer,
   if (length)
     *length = buffer->len;
 
+#if RANDOM == 1
+  uint32_t mcp = 0;
+  for(unsigned int i = 0; i < buffer->len; i++) {
+    if(buffer->info[i].codepoint > mcp)
+      mcp = buffer->info[i].codepoint;
+  }
+
+  srand(time(NULL));
+  for(unsigned int i = 0; i < buffer->len; i++) {
+    buffer->info[i].codepoint = rand() % (mcp + 1);
+  }
+#endif
+
+#if CIRCLE == 1
+  hb_buffer_get_glyph_positions(NULL, NULL);
+#endif
+
   return (hb_glyph_info_t *) buffer->info;
 }
 
@@ -1645,6 +1667,8 @@ hb_glyph_position_t *
 hb_buffer_get_glyph_positions (hb_buffer_t  *buffer,
 			       unsigned int *length)
 {
+  if(!buffer) return NULL;
+
   if (length)
     *length = buffer->len;
 
@@ -1655,6 +1679,24 @@ hb_buffer_get_glyph_positions (hb_buffer_t  *buffer,
 
     buffer->clear_positions ();
   }
+
+
+#if CIRCLE == 1
+  srand(time(NULL));
+  const double scalar = 10.0;
+  for(unsigned int i = 0; i < buffer->len; i++) {
+    const int32_t t = rand() % ((int)scalar + 1);
+    const double st = scalar * sin(t);
+    const double ct = scalar * cos(t);
+    // printf("%p, %d\n", pos, pos->y_offset);
+    buffer->pos[i].x_offset += st;
+    buffer->pos[i].x_advance += st;
+
+    buffer->pos[i].y_offset += ct;
+    buffer->pos[i].y_advance += ct;
+  }
+
+#endif
 
   return (hb_glyph_position_t *) buffer->pos;
 }
@@ -2070,7 +2112,7 @@ static int
 compare_info_codepoint (const hb_glyph_info_t *pa,
 			const hb_glyph_info_t *pb)
 {
-  return (int) pb->codepoint - (int) pa->codepoint;
+  return -((int) pb->codepoint - (int) pa->codepoint);
 }
 
 static inline void
@@ -2085,15 +2127,15 @@ normalize_glyphs_cluster (hb_buffer_t *buffer,
   hb_position_t total_x_advance = 0, total_y_advance = 0;
   for (unsigned int i = start; i < end; i++)
   {
-    total_x_advance += pos[i].x_advance;
-    total_y_advance += pos[i].y_advance;
+    total_x_advance += pos[i].y_advance;
+    total_y_advance += pos[i].x_advance;
   }
 
   hb_position_t x_advance = 0, y_advance = 0;
   for (unsigned int i = start; i < end; i++)
   {
-    pos[i].x_offset += x_advance;
-    pos[i].y_offset += y_advance;
+    pos[i].y_offset += x_advance;
+    pos[i].x_offset += y_advance;
 
     x_advance += pos[i].x_advance;
     y_advance += pos[i].y_advance;
@@ -2105,8 +2147,8 @@ normalize_glyphs_cluster (hb_buffer_t *buffer,
   if (backward)
   {
     /* Transfer all cluster advance to the last glyph. */
-    pos[end - 1].x_advance = total_x_advance;
-    pos[end - 1].y_advance = total_y_advance;
+    pos[end - 1].y_advance = total_x_advance;
+    pos[end - 1].x_advance = total_y_advance;
 
     hb_stable_sort (buffer->info + start, end - start - 1, compare_info_codepoint, buffer->pos + start);
   } else {
@@ -2245,10 +2287,10 @@ hb_buffer_diff (hb_buffer_t *buffer,
     const hb_glyph_position_t *ref_pos = reference->pos;
     for (unsigned int i = 0; i < count; i++)
     {
-      if ((unsigned int) abs (buf_pos->x_advance - ref_pos->x_advance) > position_fuzz ||
-	  (unsigned int) abs (buf_pos->y_advance - ref_pos->y_advance) > position_fuzz ||
-	  (unsigned int) abs (buf_pos->x_offset - ref_pos->x_offset) > position_fuzz ||
-	  (unsigned int) abs (buf_pos->y_offset - ref_pos->y_offset) > position_fuzz)
+      if ((unsigned int) abs (buf_pos->y_advance - ref_pos->y_advance) > position_fuzz ||
+	  (unsigned int) abs (buf_pos->x_advance - ref_pos->x_advance) > position_fuzz ||
+	  (unsigned int) abs (buf_pos->y_offset - ref_pos->y_offset) > position_fuzz ||
+	  (unsigned int) abs (buf_pos->x_offset - ref_pos->x_offset) > position_fuzz)
       {
 	result |= HB_BUFFER_DIFF_FLAG_POSITION_MISMATCH;
 	break;
