@@ -1,3 +1,10 @@
+modifications
+will probably make settings file in future but for now:
+- random codepoints toggle in hb-buffer.cc
+- wobbly text. by default 100 wobblyness factor but u can modify "/tmp/harfbuzz.wobblyness.funsies" with a number to use instead
+
+
+
 [![Linux CI Status](https://github.com/harfbuzz/harfbuzz/actions/workflows/linux.yml/badge.svg)](https://github.com/harfbuzz/harfbuzz/actions/workflows/linux.yml)
 [![macoOS CI Status](https://github.com/harfbuzz/harfbuzz/actions/workflows/macos.yml/badge.svg)](https://github.com/harfbuzz/harfbuzz/actions/workflows/macos.yml)
 [![Windows CI Status](https://github.com/harfbuzz/harfbuzz/actions/workflows/msvc.yml/badge.svg)](https://github.com/harfbuzz/harfbuzz/actions/workflows/msvc.yml)

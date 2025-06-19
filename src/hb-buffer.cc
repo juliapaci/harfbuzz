@@ -1638,7 +1638,7 @@ hb_buffer_get_glyph_infos (hb_buffer_t  *buffer,
 #endif
 
 #if CIRCLE == 1
-  hb_buffer_get_glyph_positions(NULL, NULL);
+  hb_buffer_get_glyph_positions(buffer, NULL);
 #endif
 
   return (hb_glyph_info_t *) buffer->info;
@@ -1667,8 +1667,6 @@ hb_glyph_position_t *
 hb_buffer_get_glyph_positions (hb_buffer_t  *buffer,
 			       unsigned int *length)
 {
-  if(!buffer) return NULL;
-
   if (length)
     *length = buffer->len;
 
@@ -1682,8 +1680,15 @@ hb_buffer_get_glyph_positions (hb_buffer_t  *buffer,
 
 
 #if CIRCLE == 1
+  FILE *f = fopen("/tmp/harfbuzz.wobblyness.funsies", "r");
+  double scalar = 100.0;
+  if(f) {
+    char ms[10];
+    fgets(ms, 10, f);
+    scalar = atoi(ms);
+    fclose(f);
+  }
   srand(time(NULL));
-  const double scalar = 10.0;
   for(unsigned int i = 0; i < buffer->len; i++) {
     const int32_t t = rand() % ((int)scalar + 1);
     const double st = scalar * sin(t);
